@@ -1,66 +1,263 @@
+// app.js
 document.addEventListener('DOMContentLoaded', () => {
-    const userNameEl = document.getElementById('userName');
-    const userIdEl = document.getElementById('userId');
-    const usernameEl = document.getElementById('username');
-    const languageEl = document.getElementById('language');
-    const closeBtn = document.getElementById('closeBtn');
+  // === Элементы DOM ===
+  const userNameEl = document.getElementById('userName');
+  const userIdEl = document.getElementById('userId');
+  const usernameEl = document.getElementById('username');
+  const languageEl = document.getElementById('language');
+  const closeBtn = document.getElementById('closeBtn');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const fullscreenText = document.getElementById('fullscreenText');
+  const saveBtn = document.getElementById('saveBtn');
+  const connectionCard = document.getElementById('connectionCard');
+  const connectionStatus = document.getElementById('connectionStatus');
 
-    function initApp() {
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
+  // === Конфигурация API ===
+  // Замените на ваш реальный домен при деплое
+  const API_BASE = 'https://your-server.com/api/mini-app'; // ← ПОМЕНЯТЬ!
+  const API_KEY = 'your-secure-api-key-here'; // ← ПОМЕНЯТЬ! (или получать динамически)
 
-            tg.ready();
-
-            tg.expand();
-
-            const user = tg.initDataUnsafe?.user;
-
-            if (user) {
-                const firstName = user.first_name || '';
-                const lastName = user.last_name || '';
-                const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-
-                userNameEl.textContent = fullName || 'Пользователь';
-                userIdEl.textContent = user.id || '—';
-                usernameEl.textContent = user.username ? `@${user.username}` : 'Не указан';
-                languageEl.textContent = user.language_code || 'en';
-
-                console.log('User data:', {
-                    id: user.id,
-                    firstName: user.first_name,
-                    lastName: user.last_name,
-                    username: user.username,
-                    languageCode: user.language_code
-                });
-            } else {
-                userNameEl.textContent = 'Тестовый режим';
-                userIdEl.textContent = '123456789';
-                usernameEl.textContent = '@test_user';
-                languageEl.textContent = 'ru';
-
-                console.log('Running in test mode - no user data available');
-            }
-
-            tg.MainButton.hide();
-        } else {
-            userNameEl.textContent = 'Ошибка инициализации';
-            userIdEl.textContent = 'Telegram WebApp не найден';
-            usernameEl.textContent = '—';
-            languageEl.textContent = '—';
-
-            console.error('Telegram WebApp SDK not found');
-        }
+  // === Инициализация Telegram WebApp ===
+  function initTelegram() {
+    if (!window.Telegram?.WebApp) {
+      console.warn('Telegram WebApp SDK not found - running in test mode');
+      return false;
     }
 
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.close();
-            } else {
-                window.close();
-            }
-        });
+    const tg = window.Telegram.WebApp;
+    
+    // Сообщаем Telegram, что приложение готово
+    tg.ready();
+    
+    // Расширяем на всю высоту
+    tg.expand();
+    
+    // Настраиваем цвета под тему пользователя
+    setupTheme(tg);
+    
+    // Получаем данные пользователя
+    const user = tg.initDataUnsafe?.user;
+    
+    if (user) {
+      const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Пользователь';
+      
+      userNameEl.textContent = fullName;
+      userIdEl.textContent = user.id;
+      usernameEl.textContent = user.username ? `@${user.username}` : 'Не указан';
+      languageEl.textContent = user.language_code || 'en';
+      
+      // Сохраняем данные для отправки в бэкенд
+      window.appData = {
+        telegramId: user.id,
+        username: user.username,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        languageCode: user.language_code,
+        initData: tg.initData // Для валидации на бэкенде
+      };
+      
+      console.log('✓ User data loaded:', window.appData);
+    } else {
+      // Тестовый режим (локальная разработка)
+      userNameEl.textContent = 'Тестовый режим';
+      userIdEl.textContent = '123456789';
+      usernameEl.textContent = '@test_user';
+      languageEl.textContent = 'ru';
+      
+      window.appData = {
+        telegramId: 123456789,
+        username: 'test_user',
+        isTestMode: true
+      };
+      
+      console.log('⚠ Running in test mode');
     }
+    
+    // Показываем кнопку fullscreen, если версия Telegram поддерживает
+    if (tg.isVersionAtLeast?.('8.0')) {
+      fullscreenBtn.style.display = 'flex';
+      updateFullscreenButton();
+    }
+    
+    // Показываем карточку статуса подключения
+    connectionCard.style.display = 'flex';
+    
+    // Слушаем события
+    tg.onEvent('viewportChanged', onViewportChange);
+    tg.onEvent('fullscreenChanged', onFullscreenChange);
+    
+    // Скрываем стандартную кнопку закрытия, используем свою
+    tg.MainButton.hide();
+    
+    return true;
+  }
 
-    initApp();
+  // === Настройка темы под Telegram ===
+  function setupTheme(tg) {
+    const root = document.documentElement;
+    
+    // Маппинг переменных Telegram на CSS переменные
+    const themeMap = {
+      'bg_color': '--tg-theme-bg-color',
+      'text_color': '--tg-theme-text-color',
+      'hint_color': '--tg-theme-hint-color',
+      'link_color': '--tg-theme-link-color',
+      'button_color': '--tg-theme-button-color',
+      'button_text_color': '--tg-theme-button-text-color',
+      'secondary_bg_color': '--tg-theme-secondary-bg-color',
+    };
+    
+    for (const [tgVar, cssVar] of Object.entries(themeMap)) {
+      if (tg[tgVar]) {
+        root.style.setProperty(cssVar, tg[tgVar]);
+      }
+    }
+  }
+
+  // === Полноэкранный режим ===
+  function toggleFullscreen() {
+    const tg = window.Telegram.WebApp;
+    
+    if (!tg?.isVersionAtLeast?.('8.0')) {
+      showStatus('Полноэкранный режим не поддерживается', 'error');
+      return;
+    }
+    
+    if (tg.isFullscreen) {
+      tg.exitFullscreen();
+    } else {
+      // requestFullscreen должен вызываться по действию пользователя
+      tg.requestFullscreen();
+    }
+  }
+
+  function updateFullscreenButton() {
+    const tg = window.Telegram.WebApp;
+    
+    if (tg.isFullscreen) {
+      fullscreenText.textContent = 'Выйти из полноэкранного';
+      fullscreenBtn.classList.add('active');
+      document.body.classList.add('fullscreen-active');
+    } else {
+      fullscreenText.textContent = 'Полноэкранный режим';
+      fullscreenBtn.classList.remove('active');
+      document.body.classList.remove('fullscreen-active');
+    }
+  }
+
+  function onFullscreenChange() {
+    updateFullscreenButton();
+    console.log('Fullscreen state:', window.Telegram.WebApp.isFullscreen);
+  }
+
+  function onViewportChange() {
+    const tg = window.Telegram.WebApp;
+    console.log(`Viewport: ${window.innerWidth}x${tg.viewportHeight}px`);
+    // Можно пересчитать макет, если нужно
+  }
+
+  // === API интеграция с бэкендом ===
+  async function saveToBackend(data) {
+    const statusEl = connectionStatus;
+    
+    try {
+      // Показываем "подключение"
+      statusEl.textContent = 'Отправка...';
+      statusEl.className = 'info-value status-connecting';
+      
+      const response = await fetch(`${API_BASE}/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY,
+          'X-Telegram-Init-Data': window.appData?.initData || ''
+        },
+        body: JSON.stringify({
+          user_id: String(window.appData.telegramId),
+          data: {
+            ...data,
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent
+          },
+          source: 'mini_app_web'
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || `HTTP ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      // Успех
+      statusEl.textContent = 'Сохранено ✓';
+      statusEl.className = 'info-value status-success';
+      
+      console.log('✓ Data saved:', result);
+      return result;
+      
+    } catch (error) {
+      console.error('✗ Save failed:', error);
+      
+      statusEl.textContent = 'Ошибка соединения';
+      statusEl.className = 'info-value status-error';
+      
+      // Показываем уведомление Telegram
+      if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert(`❌ Не удалось сохранить: ${error.message}`);
+      }
+      
+      return null;
+    }
+  }
+
+  // === Вспомогательные функции ===
+  function showStatus(message, type = 'info') {
+    if (window.Telegram?.WebApp?.showAlert) {
+      window.Telegram.WebApp.showAlert(message);
+    } else {
+      alert(message);
+    }
+  }
+
+  // === Обработчики событий ===
+  
+  // Кнопка закрытия
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.close();
+      } else {
+        window.close();
+      }
+    });
+  }
+  
+  // Кнопка fullscreen
+  if (fullscreenBtn) {
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+  }
+  
+  // Кнопка сохранения (пример)
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      const result = await saveToBackend({
+        action: 'manual_save',
+        note: 'Пользователь нажал кнопку сохранения'
+      });
+      
+      if (result) {
+        showStatus('✅ Данные успешно сохранены!');
+      }
+    });
+  }
+
+  // === Инициализация ===
+  const isTelegram = initTelegram();
+  
+  if (!isTelegram) {
+    console.log('Running outside Telegram - some features disabled');
+  }
 });
+
