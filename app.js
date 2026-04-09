@@ -157,29 +157,35 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // === API интеграция с бэкендом ===
+  // app.js — упрощённая функция отправки
+
   async function saveToBackend(data) {
-    const statusEl = connectionStatus;
+    const statusEl = document.getElementById('connectionStatus');
     
     try {
-      // Показываем "подключение"
-      statusEl.textContent = 'Отправка...';
-      statusEl.className = 'info-value status-connecting';
+      // Показываем статус "отправка"
+      if (statusEl) {
+        statusEl.textContent = 'Отправка...';
+        statusEl.className = 'info-value status-connecting';
+      }
+      
+      const API_BASE = 'https://your-server.com/api/mini-app'; // ← ПОМЕНЯТЬ!
+      const API_KEY = 'your-secure-api-key-here'; // ← ПОМЕНЯТЬ!
       
       const response = await fetch(`${API_BASE}/save`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
-          'X-Telegram-Init-Data': window.appData?.initData || ''
+          'X-API-Key': API_KEY
+          // Убрали X-Telegram-Init-Data для простоты
         },
         body: JSON.stringify({
-          user_id: String(window.appData.telegramId),
-          data: {
-            ...data,
-            timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent
-          },
-          source: 'mini_app_web'
+          message: 'mini_app_action',
+          meta: {
+            action: data.action || 'manual_save',
+            note: data.note || '',
+            timestamp: new Date().toISOString()
+          }
         })
       });
       
@@ -191,26 +197,37 @@ document.addEventListener('DOMContentLoaded', () => {
       const result = await response.json();
       
       // Успех
-      statusEl.textContent = 'Сохранено ✓';
-      statusEl.className = 'info-value status-success';
+      if (statusEl) {
+        statusEl.textContent = 'Сохранено ✓';
+        statusEl.className = 'info-value status-success';
+      }
       
-      console.log('✓ Data saved:', result);
+      console.log('✓ Server response:', result);
+      
+      // Показываем уведомление
+      if (window.Telegram?.WebApp?.showAlert && result.ok) {
+        window.Telegram.WebApp.showAlert('✅ Данные отправлены!');
+      }
+      
       return result;
       
     } catch (error) {
-      console.error('✗ Save failed:', error);
+      console.error('✗ Request failed:', error);
       
-      statusEl.textContent = 'Ошибка соединения';
-      statusEl.className = 'info-value status-error';
+      if (statusEl) {
+        statusEl.textContent = 'Ошибка';
+        statusEl.className = 'info-value status-error';
+      }
       
-      // Показываем уведомление Telegram
       if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert(`❌ Не удалось сохранить: ${error.message}`);
+        window.Telegram.WebApp.showAlert(`❌ Ошибка: ${error.message}`);
       }
       
       return null;
     }
   }
+
+
 
   // === Вспомогательные функции ===
   function showStatus(message, type = 'info') {
