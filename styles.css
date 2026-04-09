@@ -201,3 +201,134 @@ body {
         font-size: 20px;
     }
 }
+
+/* styles.css — ДОБАВЬТЕ В КОНЕЦ ФАЙЛА */
+
+/* === Telegram Theme Variables === */
+:root {
+  /* Fallback colors */
+  --tg-theme-bg-color: #f4f4f5;
+  --tg-theme-text-color: #1f2937;
+  --tg-theme-hint-color: #6b7280;
+  --tg-theme-link-color: #528BFF;
+  --tg-theme-button-color: #528BFF;
+  --tg-theme-button-text-color: #ffffff;
+  --tg-theme-secondary-bg-color: #ffffff;
+}
+
+/* Применяем тему Telegram */
+body {
+  background-color: var(--tg-theme-bg-color, #f4f4f5);
+  color: var(--tg-theme-text-color, #1f2937);
+}
+
+.header h1,
+.user-name,
+.info-value {
+  color: var(--tg-theme-text-color, #1f2937);
+}
+
+.subtitle,
+.info-label,
+.footer p {
+  color: var(--tg-theme-hint-color, #6b7280);
+}
+
+.info-card {
+  background: var(--tg-theme-secondary-bg-color, #ffffff);
+}
+
+.btn-primary {
+  background: var(--tg-theme-button-color, #528BFF);
+  color: var(--tg-theme-button-text-color, #ffffff);
+}
+
+/* === Вторичная кнопка (для fullscreen) === */
+.btn-secondary {
+  width: 100%;
+  padding: 14px 24px;
+  background: transparent;
+  color: var(--tg-theme-link-color, #528BFF);
+  border: 2px solid var(--tg-theme-link-color, #528BFF);
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--tg-theme-secondary-bg-color, rgba(82, 139, 255, 0.1));
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* === Полноэкранный режим === */
+body.fullscreen-active {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+body.fullscreen-active .header {
+  padding-top: env(safe-area-inset-top);
+}
+
+body.fullscreen-active .footer {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Скрываем элементы в полноэкранном режиме, если нужно */
+body.fullscreen-active .hide-in-fullscreen {
+  display: none !important;
+}
+
+/* === Safe Area для iPhone === */
+@supports (padding: max(0px)) {
+  .container {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+}
+
+/* === Анимации статуса === */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.status-connecting {
+  color: var(--tg-theme-hint-color, #6b7280) !important;
+  animation: pulse 1.5s infinite;
+}
+
+.status-error {
+  color: #ef4444 !important;
+}
+
+.status-success {
+  color: #22c55e !important;
+}
+
+/* === Адаптивность для fullscreen === */
+@media (max-height: 500px) {
+  .user-card {
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .info-section {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .action-section {
+    padding-top: 8px;
+  }
+}
+
