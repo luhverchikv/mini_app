@@ -11,7 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveBtn = document.getElementById('saveBtn');
   const connectionCard = document.getElementById('connectionCard');
   const connectionStatus = document.getElementById('connectionStatus');
-
+  
+  // === Геолокация ===
+  const locationCard = document.getElementById('locationCard');
+  const locationValue = document.getElementById('locationValue');
+  const requestLocationBtn = document.getElementById('requestLocationBtn');
+  
   // === Конфигурация API ===
   // Замените на ваш реальный домен при деплое
   const API_BASE = 'https://your-server.com/api/mini-app'; // ← ПОМЕНЯТЬ!
@@ -28,9 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Сообщаем Telegram, что приложение готово
     tg.ready();
-    
-    // Расширяем на всю высоту
-    // tg.expand();
     
     // Настраиваем цвета под тему пользователя
     setupTheme(tg);
@@ -72,15 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       console.log('⚠ Running in test mode');
     }
+
     
-    // Показываем кнопку fullscreen, если версия Telegram поддерживает
-    // if (tg.isVersionAtLeast?.('8.0')) {
-      // fullscreenBtn.style.display = 'flex';
-      // updateFullscreenButton();
-    // }
-    
-    // Показываем карточку статуса подключения
-    connectionCard.style.display = 'flex';
+    // Показываем карточку геолокации вместо статуса
+    locationCard.style.display = 'flex';
+    // connectionCard.style.display = 'flex'; // это кнопка Статус. пока на удаление
     
     // Слушаем события
     tg.onEvent('viewportChanged', onViewportChange);
@@ -288,6 +286,52 @@ document.addEventListener('DOMContentLoaded', () => {
         showStatus('✅ Данные успешно сохранены!');
       }
     });
+  }
+
+  // === Работа с геолокацией Telegram ===
+  async function requestTelegramLocation() {
+    if (!window.Telegram?.WebApp?.LocationManager) {
+      showStatus('Геолокация не поддерживается в этой версии Telegram', 'error');
+      return;
+    }
+  
+    const locationManager = Telegram.WebApp.LocationManager;
+  
+    if (!locationManager.isSupported()) {
+      showStatus('Геолокация недоступна', 'error');
+      return;
+    }
+  
+    // Меняем текст кнопки на время запроса
+    const originalText = requestLocationBtn.textContent;
+    requestLocationBtn.textContent = '⏳ Запрос...';
+    requestLocationBtn.disabled = true;
+  
+    try {
+      const location = await locationManager.requestLocation();
+      if (location && location.latitude && location.longitude) {
+        // Отображаем координаты (можно округлить до 5 знаков)
+        const lat = location.latitude.toFixed(5);
+        const lon = location.longitude.toFixed(5);
+        locationValue.innerHTML = `📍 ${lat}, ${lon}`;
+        if (location.horizontal_accuracy) {
+          locationValue.title = `Точность: ±${location.horizontal_accuracy} м`; // подсказка
+        }
+        // Можно сохранить координаты в глобальный объект для отправки на бэкенд
+        window.userLocation = { latitude: location.latitude, longitude: location.longitude };
+        showStatus('Геолокация получена!', 'info');
+      } else {
+        locationValue.textContent = '❌ Доступ запрещён';
+        showStatus('Вы не разрешили доступ к геолокации', 'error');
+      }
+    } catch (err) {
+      console.error('Location error:', err);
+      locationValue.textContent = '❌ Ошибка';
+      showStatus('Не удалось определить местоположение', 'error');
+    } finally {
+      requestLocationBtn.textContent = originalText;
+      requestLocationBtn.disabled = false;
+    }
   }
 
   // === Инициализация ===
