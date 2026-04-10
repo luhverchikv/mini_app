@@ -332,3 +332,130 @@ body.fullscreen-active .hide-in-fullscreen {
   }
 }
 
+/* styles.css — бесшовная интеграция с Telegram */
+
+/* Убираем стандартные отступы браузера */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--tg-theme-bg-color, #f4f4f5);
+  color: var(--tg-theme-text-color, #1f2937);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: background-color 0.2s, color 0.2s;
+  /* Плавное появление */
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* Контейнер на всю доступную высоту */
+.container {
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height для мобильных */
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* Header сливается с интерфейсом Telegram */
+.header {
+  padding-top: 0; /* Telegram сам добавит отступ под статус-бар */
+  padding-bottom: 12px;
+  text-align: center;
+  background: transparent; /* Прозрачный фон */
+}
+
+/* Карточки с лёгкой тенью */
+.user-card,
+.info-card {
+  background: var(--tg-theme-secondary-bg-color, #ffffff);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Кнопки на всю ширину */
+.btn-primary,
+.btn-secondary {
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  transition: transform 0.1s ease, opacity 0.2s;
+}
+
+.btn-primary {
+  background: var(--tg-theme-button-color, #528BFF);
+  color: var(--tg-theme-button-text-color, #ffffff);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+  opacity: 0.95;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--tg-theme-link-color, #528BFF);
+  border: 2px solid var(--tg-theme-link-color, #528BFF);
+}
+
+/* Footer прижат к низу */
+.footer {
+  margin-top: auto;
+  padding-top: 24px;
+  text-align: center;
+  color: var(--tg-theme-hint-color, #6b7280);
+  font-size: 13px;
+}
+
+/* === Полноэкранный режим (дополнительные стили) === */
+body.fullscreen-active {
+  /* В настоящем фуллскрине можно убрать лишние элементы */
+}
+
+body.fullscreen-active .hide-in-fullscreen {
+  display: none !important;
+}
+
+/* === Адаптивность === */
+@media (max-height: 500px) {
+  .container {
+    padding: 12px;
+  }
+  
+  .header h1 {
+    font-size: 20px;
+  }
+  
+  .user-card {
+    padding: 12px;
+  }
+}
+
+
+
