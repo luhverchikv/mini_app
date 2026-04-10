@@ -287,6 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+  
+  if (requestLocationBtn) {
+    requestLocationBtn.addEventListener('click', requestTelegramLocation);
+    }
 
   // === Работа с геолокацией Telegram ===
   async function requestTelegramLocation() {
