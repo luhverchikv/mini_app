@@ -18,79 +18,163 @@ document.addEventListener('DOMContentLoaded', () => {
   const API_KEY = 'your-secure-api-key-here'; // ← ПОМЕНЯТЬ! (или получать динамически)
 
   // === Инициализация Telegram WebApp ===
+  // app.js — автоматическое расширение при загрузке
+
   function initTelegram() {
     if (!window.Telegram?.WebApp) {
       console.warn('Telegram WebApp SDK not found - running in test mode');
       return false;
     }
-
+  
     const tg = window.Telegram.WebApp;
     
-    // Сообщаем Telegram, что приложение готово
+    // 1. Сообщаем, что приложение готово
     tg.ready();
     
-    // Расширяем на всю высоту
+    // 2. 🔥 АВТОМАТИЧЕСКИ расширяем на всю высоту
     tg.expand();
     
-    // Настраиваем цвета под тему пользователя
+    // 3. Отключаем вертикальные свайпы (чтобы случайно не закрыть)
+    if (tg.isVersionAtLeast('6.1')) {
+      tg.disableVerticalSwipes();
+    }
+    
+    // 4. Настраиваем цвета под тему пользователя (бесшовная интеграция)
     setupTheme(tg);
     
-    // Получаем данные пользователя
+    // 5. Опционально: скрываем стандартную кнопку закрытия
+    // (если у вас есть своя кнопка "Назад" или "Закрыть")
+    // tg.MainButton.hide();
+    // tg.BackButton.hide(); // или покажите, если нужна навигация
+    
+    // 6. Получаем данные пользователя
     const user = tg.initDataUnsafe?.user;
     
     if (user) {
       const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Пользователь';
       
-      userNameEl.textContent = fullName;
-      userIdEl.textContent = user.id;
-      usernameEl.textContent = user.username ? `@${user.username}` : 'Не указан';
-      languageEl.textContent = user.language_code || 'en';
+      // Обновляем UI
+      const userNameEl = document.getElementById('userName');
+      const userIdEl = document.getElementById('userId');
+      const usernameEl = document.getElementById('username');
+      const languageEl = document.getElementById('language');
       
-      // Сохраняем данные для отправки в бэкенд
+      if (userNameEl) userNameEl.textContent = fullName;
+      if (userIdEl) userIdEl.textContent = user.id;
+      if (usernameEl) usernameEl.textContent = user.username ? `@${user.username}` : 'Не указан';
+      if (languageEl) languageEl.textContent = user.language_code || 'en';
+      
+      // Сохраняем для отправки на бэкенд
       window.appData = {
         telegramId: user.id,
         username: user.username,
         firstName: user.first_name,
         lastName: user.last_name,
         languageCode: user.language_code,
-        initData: tg.initData // Для валидации на бэкенде
+        initData: tg.initData
       };
       
       console.log('✓ User data loaded:', window.appData);
     } else {
-      // Тестовый режим (локальная разработка)
-      userNameEl.textContent = 'Тестовый режим';
-      userIdEl.textContent = '123456789';
-      usernameEl.textContent = '@test_user';
-      languageEl.textContent = 'ru';
-      
-      window.appData = {
-        telegramId: 123456789,
-        username: 'test_user',
-        isTestMode: true
-      };
-      
-      console.log('⚠ Running in test mode');
+      // Тестовый режим
+      console.log('⚠ Running in test mode (no Telegram user data)');
+      window.appData = { isTestMode: true };
     }
     
-    // Показываем кнопку fullscreen, если версия Telegram поддерживает
-    if (tg.isVersionAtLeast?.('8.0')) {
+    // 7. Показываем кнопку fullscreen ТОЛЬКО если нужна настоящая иммерсивность
+    // (игры, видео и т.д.)
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    if (fullscreenBtn && tg.isVersionAtLeast?.('8.0')) {
+      // Показываем кнопку, но не требуем её нажатия
       fullscreenBtn.style.display = 'flex';
       updateFullscreenButton();
+    } else if (fullscreenBtn) {
+      fullscreenBtn.style.display = 'none';
     }
     
-    // Показываем карточку статуса подключения
-    connectionCard.style.display = 'flex';
-    
-    // Слушаем события
+    // 8. Слушаем изменения вида
     tg.onEvent('viewportChanged', onViewportChange);
     tg.onEvent('fullscreenChanged', onFullscreenChange);
     
-    // Скрываем стандартную кнопку закрытия, используем свою
-    tg.MainButton.hide();
-    
     return true;
   }
+
+// === Вспомогательные функции ===
+
+function setupTheme(tg) {
+  const root = document.documentElement;
+  
+  const themeMap = {
+    'bg_color': '--tg-theme-bg-color',
+    'text_color': '--tg-theme-text-color', 
+    'hint_color': '--tg-theme-hint-color',
+    'link_color': '--tg-theme-link-color',
+    'button_color': '--tg-theme-button-color',
+    'button_text_color': '--tg-theme-button-text-color',
+    'secondary_bg_color': '--tg-theme-secondary-bg-color',
+  };
+  
+  for (const [tgVar, cssVar] of Object.entries(themeMap)) {
+    if (tg[tgVar]) {
+      root.style.setProperty(cssVar, tg[tgVar]);
+    }
+  }
+  
+  // Устанавливаем цвета хедера для бесшовности
+  if (tg.setHeaderColor) {
+    tg.setHeaderColor(tg.bg_color || '#ffffff');
+  }
+  if (tg.setBackgroundColor) {
+    tg.setBackgroundColor(tg.bg_color || '#ffffff');
+  }
+}
+
+function onViewportChange() {
+  const tg = window.Telegram.WebApp;
+  console.log(`Viewport: ${window.innerWidth}x${tg.viewportHeight}px`);
+  // Можно пересчитать макет, если нужно
+}
+
+function onFullscreenChange() {
+  updateFullscreenButton();
+}
+
+function updateFullscreenButton() {
+  const tg = window.Telegram.WebApp;
+  const btn = document.getElementById('fullscreenBtn');
+  const text = document.getElementById('fullscreenText');
+  
+  if (!btn || !text) return;
+  
+  if (tg.isFullscreen) {
+    text.textContent = '🗕 Свернуть';
+    btn.classList.add('active');
+    document.body.classList.add('fullscreen-active');
+  } else {
+    text.textContent = '⛶ На весь экран';
+    btn.classList.remove('active');
+    document.body.classList.remove('fullscreen-active');
+  }
+}
+
+// === Кнопка переключения фуллскрина (опционально) ===
+function toggleFullscreen() {
+  const tg = window.Telegram.WebApp;
+  
+  if (!tg?.isVersionAtLeast?.('8.0')) {
+    if (tg.showAlert) tg.showAlert('Полноэкранный режим не поддерживается в этой версии Telegram');
+    return;
+  }
+  
+  if (tg.isFullscreen) {
+    tg.exitFullscreen();
+  } else {
+    // requestFullscreen вызывается по клику — это разрешено
+    tg.requestFullscreen();
+  }
+}
+
+
 
   // === Настройка темы под Telegram ===
   function setupTheme(tg) {
