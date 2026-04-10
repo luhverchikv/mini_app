@@ -353,3 +353,18 @@ body.fullscreen-active .hide-in-fullscreen {
     width: 16px;
     height: 16px;
 }
+
+.btn-small {
+  background: var(--tg-theme-button-color, #528BFF);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-small:hover {
+  opacity: 0.9;
+}
