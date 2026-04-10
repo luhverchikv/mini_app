@@ -68,21 +68,20 @@
         </div>
       </div>
 
-      <!-- Новая карточка: статус подключения -->
-      <div class="info-card" id="connectionCard" style="display:none;">
+      <!-- Карточка геолокации -->
+      <div class="info-card" id="locationCard" style="display:none;">
         <div class="info-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5 12.55C6.5 10.5 9 9 12 9C15 9 17.5 10.5 19 12.55" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
-            <path d="M8.5 15.55C9.5 14.5 10.5 14 12 14C13.5 14 14.5 14.5 15.5 15.55" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="12" cy="19" r="1" fill="#22C55E"/>
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="#528BFF" stroke-width="2"/>
+            <circle cx="12" cy="9" r="2.5" fill="#528BFF"/>
           </svg>
         </div>
         <div class="info-content">
-          <span class="info-label">Статус</span>
-          <span class="info-value" id="connectionStatus" style="color:#22C55E;">Подключено</span>
+          <span class="info-label">Геолокация</span>
+          <span class="info-value" id="locationValue">Не запрошена</span>
         </div>
+        <button id="requestLocationBtn" class="btn-small" style="margin-left: auto;">📍 Запросить</button>
       </div>
-    </div>
 
     <!-- Action Section -->
     <div class="action-section">
