@@ -1,119 +1,58 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
+  <!-- viewport-fit=cover для полного покрытия экрана -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Mini App CRM</title>
   
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   
-  <!-- Ваши стили -->
+  <!-- Стили -->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
+    <!-- Ваш контент -->
     <header class="header">
-      <div class="logo">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#528BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M2 17L12 22L22 17" stroke="#528BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M2 12L12 17L22 12" stroke="#528BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
       <h1>CRM Система</h1>
       <p class="subtitle">Управление данными</p>
     </header>
 
-    <!-- User Card -->
     <div class="user-card">
-      <div class="user-avatar">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="7" r="4" stroke="#528BFF" stroke-width="2"/>
-          <path d="M5.5 21C5.5 17.9624 8.46243 15.5 12 15.5C15.5376 15.5 18.5 17.9624 18.5 21" stroke="#528BFF" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <h2 class="user-name" id="userName">Загрузка...</h2>
-      <p class="user-status" id="userStatus">ID: <span id="userId">—</span></p>
+      <h2 id="userName">Загрузка...</h2>
+      <p>ID: <span id="userId">—</span></p>
     </div>
 
-    <!-- Info Section -->
     <div class="info-section">
       <div class="info-card">
-        <div class="info-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="#528BFF" stroke-width="2"/>
-            <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="#528BFF" stroke-width="2"/>
-          </svg>
-        </div>
-        <div class="info-content">
-          <span class="info-label">Username</span>
-          <span class="info-value" id="username">@—</span>
-        </div>
+        <span class="info-label">Username</span>
+        <span class="info-value" id="username">@—</span>
       </div>
-
       <div class="info-card">
-        <div class="info-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 5H21" stroke="#528BFF" stroke-width="2" stroke-linecap="round"/>
-            <path d="M3 12H21" stroke="#528BFF" stroke-width="2" stroke-linecap="round"/>
-            <path d="M3 19H21" stroke="#528BFF" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="info-content">
-          <span class="info-label">Язык</span>
-          <span class="info-value" id="language">—</span>
-        </div>
-      </div>
-
-      <!-- Новая карточка: статус подключения -->
-      <div class="info-card" id="connectionCard" style="display:none;">
-        <div class="info-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5 12.55C6.5 10.5 9 9 12 9C15 9 17.5 10.5 19 12.55" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
-            <path d="M8.5 15.55C9.5 14.5 10.5 14 12 14C13.5 14 14.5 14.5 15.5 15.55" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="12" cy="19" r="1" fill="#22C55E"/>
-          </svg>
-        </div>
-        <div class="info-content">
-          <span class="info-label">Статус</span>
-          <span class="info-value" id="connectionStatus" style="color:#22C55E;">Подключено</span>
-        </div>
+        <span class="info-label">Статус</span>
+        <span class="info-value" id="connectionStatus">Готово</span>
       </div>
     </div>
 
-    <!-- Action Section -->
     <div class="action-section">
-      <!-- Кнопка полноэкранного режима -->
-      <button id="fullscreenBtn" class="btn-secondary" style="display:none; margin-bottom:12px;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M8 3H5C3.89543 3 3 3.89543 3 5V8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M21 8V5C21 3.89543 20.1046 3 19 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M16 21H19C20.1046 21 21 20.1046 21 19V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M3 16V19C3 20.1046 3.89543 21 5 21H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <span id="fullscreenText">Полноэкранный режим</span>
+      <!-- Кнопка фуллскрина (опционально) -->
+      <button id="fullscreenBtn" class="btn-secondary" style="display:none;">
+        <span id="fullscreenText">На весь экран</span>
       </button>
-
-      <!-- Кнопка отправки данных -->
+      
+      <!-- Основная кнопка действия -->
       <button id="saveBtn" class="btn-primary">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
         Сохранить данные
       </button>
     </div>
 
-    <!-- Footer -->
     <footer class="footer">
       <p>© 2026 CRM System</p>
     </footer>
   </div>
 
-  <!-- Скрипт приложения -->
   <script src="app.js"></script>
 </body>
 </html>
