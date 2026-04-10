@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tg.ready();
     
     // Расширяем на всю высоту
-    tg.expand();
+    // tg.expand();
     
     // Настраиваем цвета под тему пользователя
     setupTheme(tg);
@@ -74,10 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Показываем кнопку fullscreen, если версия Telegram поддерживает
-    if (tg.isVersionAtLeast?.('8.0')) {
-      fullscreenBtn.style.display = 'flex';
-      updateFullscreenButton();
-    }
+    // if (tg.isVersionAtLeast?.('8.0')) {
+      // fullscreenBtn.style.display = 'flex';
+      // updateFullscreenButton();
+    // }
     
     // Показываем карточку статуса подключения
     connectionCard.style.display = 'flex';
@@ -89,9 +89,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Скрываем стандартную кнопку закрытия, используем свою
     tg.MainButton.hide();
     
+    // Пытаемся включить полноэкранный режим
+    function tryEnterFullscreen() {
+        if (tg.requestFullscreen) {
+            tg.requestFullscreen().catch(err => {
+                console.warn('Fullscreen request failed:', err);
+                // fallback — просто расширяем
+                tg.expand();
+                // Показываем кнопку, если автоматика не сработала
+                if (fullscreenBtn) fullscreenBtn.style.display = 'flex';
+            });
+        } else {
+            // Старая версия Telegram — просто расширяем
+            tg.expand();
+            if (fullscreenBtn) fullscreenBtn.style.display = 'flex';
+        }
+    }
+    
+    // Вызываем сразу
+    tryEnterFullscreen();
+    
     return true;
   }
-
+  
   // === Настройка темы под Telegram ===
   function setupTheme(tg) {
     const root = document.documentElement;
