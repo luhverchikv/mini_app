@@ -332,3 +332,24 @@ body.fullscreen-active .hide-in-fullscreen {
   }
 }
 
+/* Маленькая плавающая кнопка fullscreen (если нужна) */
+.btn-secondary {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: auto;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    border: none;
+    border-radius: 40px;
+    color: white;
+    font-size: 12px;
+    gap: 4px;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.btn-secondary svg {
+    width: 16px;
+    height: 16px;
+}
